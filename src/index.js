@@ -4,6 +4,10 @@ import './index.css';
 import App from './App';
 //import * as serviceWorker from './serviceWorker';
 
+// Uses a DOM node in your HTML to replace it with JSX. This way you can
+// integrat React in any foreign application easily, and you can use ReactDOM.render()
+// multiple times im your application. In a plain React application you would only use it
+// once to bootstrap the component tree
 ReactDOM.render(<App />, document.getElementById('root'));
 
 // If you want your app to work offline and load faster, you can change
