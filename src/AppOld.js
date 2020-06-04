@@ -83,7 +83,7 @@ class App extends Component {
 
         const basicOrArrow = "arrow";
         
-        if(basicOrArrow === "basic") {               
+        if(basicOrArrow == "basic") {               
             return (
                 // Use JSX to render the JavaScript variables and object into HTML                       
                 <div className="App">
@@ -112,7 +112,7 @@ class App extends Component {
                     })}
                 </div>
             );
-        } else if(basicOrArrow === "arrow") { // use the arrow function to return, which is equivalent to the above
+        } else if(basicOrArrow == "arrow") { // use the arrow function to return, which is equivalent to the above
             return (
                 // Use JSX to render the JavaScript variables and object into HTML                       
                 <div className="App">
@@ -122,23 +122,23 @@ class App extends Component {
                     <br/>
                     <div> In the year {year} it is {isAccurate} that {dinner} will be on the {doesntExist} {notdefined}</div>                     
                     
-                    {list.map(item => 
+                    {list.map(
                         // Use built in JavaScript map functionality in JSX, which iterates over a list of items to display them according to specific attributes
                         // IMPORTANT by specifying a unique key, you are helping React embrace its full potential, in that it can identify modified items
                         // when the list changes. Also you will see a warning about each item needing a unique key in the console if one is not provided. Make
                         // sure that the key is stable (not something like list index, which is prove to change if items in list are reordered)
-                        
-                        // item => { replaces the need for function(item) {
-                        // by ommiting the { after => we create a concise body. The return is implied and therefore return { } around the content is not needed                       
-                        <div key={item.objectID}>
-                            <span>
-                                <a href={item.url}>{item.title}</a>
-                            </span>
-                            <span>{item.author}</span>
-                            <span>{item.num_comments}</span>
-                            <span>{item.points}</span>
-                        </div>
-                    )}
+                        function(item) {
+                        return (
+                            <div key={item.objectID}>
+                                <span>
+                                    <a href={item.url}>{item.title}</a>
+                                </span>
+                                <span>{item.author}</span>
+                                <span>{item.num_comments}</span>
+                                <span>{item.points}</span>
+                            </div>
+                        );
+                    })}
                 </div>
             );            
         }  
