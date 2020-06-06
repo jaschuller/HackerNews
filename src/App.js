@@ -1,6 +1,38 @@
 import React, { Component } from 'react';
 import './App.css';
 
+    // ES5
+    var userES5 = {
+        name: 'Robin',
+    };
+    
+    // ES6 Object Initializer: allows you to use computed property names to allocate values by key in an object dynamically
+    // This is a handy way to generate lookup tables in JavaScript
+    const key = 'name';
+    const user = {
+        [key]: 'Robin',
+    };
+    
+    // ES5
+    var userServiceES5 = {
+        getUserName: function (user) {
+            return user.firstName + ' ' + user.lastName;
+        },
+    };
+    
+    // JavaScripts built in filter functionality. The functions takes in a list and iterates over them, returning a new list
+    // (it doesnt mutate the old ones)
+    const words = ['spray', 'limit', 'elite', 'exurberant', 'destruction', 'present'];
+    const filteredWords = words.filter(function (word) { return word.length < 6});
+    console.log("the words are: " + filteredWords);
+    
+    // ES6 Object Initializer you can initialize method in an object more concisely using shorthand method names
+    const userService = {
+        getUserName(user) {
+            return user.firstName + ' ' + user.lastName;
+        },
+    };
+
     // Sample data which will be fetched from an API later on
     const list = [
         {
@@ -20,6 +52,9 @@ import './App.css';
             objectID: 1,
         }
     ];
+    
+    var year = 2020; //number 
+    var desert = "cake";
     
     
     // Arrow Functions introduced in ES6, they are shorter than a function expression
@@ -55,13 +90,57 @@ import './App.css';
     const newArray = array.map(function (x) { return x * 2; });
     console.log(newArray);
 
+// App is a derived class since it extends component
 class App extends Component {
     
+    // calling super(props) from Component sets this.props so that we can access
+    // properties using this.props (they would be undefined otherwise) in the constructor
+    constructor(props) {
+        
+        // super.method calls the parent method. super(...) here calls the parent constructor
+        super(props);
+        
+        // state is bound to the class using the this object, so you can access the local state of the whole
+        // component. For instance it can be used in the render() method. Using list in this way retrieves if from the local
+        // state of the component
+        
+        // the first variable is the one that will be in the state, set to the value of the second one
+        this.state = {            
+            theyear: year,
+            dinner: "Lobster",
+            // ES6 Object Initializer, when the property name in your object is the same as your variable name, you can do the following
+            desert,
+            list,
+        }
+        
+        // the method is bound to the class (which is why is uses this) and thus becomes a class method
+        this.onDismiss = this.onDismiss.bind(this);
+    }
+
+    // Combined with the button that calls onDismiss, this is an example of the Unidirectional data flow of React
+    // An action is triggered in the view layer with onClick(), a function or class method modified the local component state,
+    // and then the render() method of the component runs again to update the view.
+    onDismiss(id) {
+        debugger;
+        /* function isNotId (declared with arrows), takes item as a param, and returns that same item if it does not match id
+        const isNotId = item => item.objectID !== id;
+        
+        // loop over all the list items and call isNotId on each one
+        const updatedList = this.state.list.filter(isNotId);
+        */
+        
+        // whole function can be defined in a single line with the disadvantage that it might be less readable
+        const updatedList = this.state.list.filter(item => item.objectID != id);
+        
+        // use setState to update the state with the new list, containing all items except for the one that matched the 
+        // id if the list element clicked
+        this.setState({list: updatedList});
+    }
+        
     render() {   
             
         // JavaScript primitives
-        var dinner = "Turkey"; //string
-        var year = 2020; //number
+        var dinner = "Turkey"; //string        
         var isAccurate = true; //boolean
         var doesntExist = null;
         var notdefined = undefined;
@@ -83,7 +162,7 @@ class App extends Component {
 
         const basicOrArrow = "arrow";
         
-        if(basicOrArrow === "basic") {               
+        if(basicOrArrow === "arrow") {
             return (
                 // Use JSX to render the JavaScript variables and object into HTML                       
                 <div className="App">
@@ -91,7 +170,45 @@ class App extends Component {
                     <div> Welcome user {user.userName}</div>
                     <div> {user.firstName} {user.lastName} Age: {user.age}</div>
                     <br/>
-                    <div> In the year {year} it is {isAccurate} that {dinner} will be on the {doesntExist} {notdefined}</div> 
+                    <div> In the year {this.state.theyear} it is {isAccurate} that {dinner} and {this.state.dinner} will be on the {doesntExist} {notdefined}</div> 
+                    <div> Then we will have some {this.state.desert}!</div>
+                    
+                    {this.state.list.map(item => 
+                        // Use built in JavaScript map functionality in JSX, which iterates over a list of items to display them according to specific attributes
+                        // IMPORTANT by specifying a unique key, you are helping React embrace its full potential, in that it can identify modified items
+                        // when the list changes. Also you will see a warning about each item needing a unique key in the console if one is not provided. Make
+                        // sure that the key is stable (not something like list index, which is prove to change if items in list are reordered)
+                        
+                        // item => { replaces the need for function(item) {
+                        // by ommiting the { after => we create a concise body. The return is implied and therefore return { } around the content is not needed                       
+                        <div key={item.objectID}>
+                            <span>
+                                <a href={item.url}>{item.title}</a>
+                            </span>
+                            <span> Author: {item.author}</span>
+                            <span> Comments: {item.num_comments}</span>
+                            <span> Points: {item.points}</span>
+                            <span>
+                                <button
+                                    onClick={() => this.onDismiss(item.objectID)}
+                                    type="button"
+                                >
+                                  Dismiss
+                                </button>
+                            </span>
+                        </div>
+                    )}
+                </div>
+            );            
+        } else if(basicOrArrow === "basic") { // use the arrow function to return, which is equivalent to the above
+                        return (
+                // Use JSX to render the JavaScript variables and object into HTML                       
+                <div className="App">
+                    <h2>{helloWorld}</h2>
+                    <div> Welcome user {user.userName}</div>
+                    <div> {user.firstName} {user.lastName} Age: {user.age}</div>
+                    <br/>
+                    <div> In the year {year} it is {isAccurate} that {dinner} will be on the {doesntExist} {notdefined}</div>                    
                     
                     {list.map(
                         // Use built in JavaScript map functionality in JSX, which iterates over a list of items to display them according to specific attributes
@@ -112,35 +229,6 @@ class App extends Component {
                     })}
                 </div>
             );
-        } else if(basicOrArrow === "arrow") { // use the arrow function to return, which is equivalent to the above
-            return (
-                // Use JSX to render the JavaScript variables and object into HTML                       
-                <div className="App">
-                    <h2>{helloWorld}</h2>
-                    <div> Welcome user {user.userName}</div>
-                    <div> {user.firstName} {user.lastName} Age: {user.age}</div>
-                    <br/>
-                    <div> In the year {year} it is {isAccurate} that {dinner} will be on the {doesntExist} {notdefined}</div>                     
-                    
-                    {list.map(item => 
-                        // Use built in JavaScript map functionality in JSX, which iterates over a list of items to display them according to specific attributes
-                        // IMPORTANT by specifying a unique key, you are helping React embrace its full potential, in that it can identify modified items
-                        // when the list changes. Also you will see a warning about each item needing a unique key in the console if one is not provided. Make
-                        // sure that the key is stable (not something like list index, which is prove to change if items in list are reordered)
-                        
-                        // item => { replaces the need for function(item) {
-                        // by ommiting the { after => we create a concise body. The return is implied and therefore return { } around the content is not needed                       
-                        <div key={item.objectID}>
-                            <span>
-                                <a href={item.url}>{item.title}</a>
-                            </span>
-                            <span>{item.author}</span>
-                            <span>{item.num_comments}</span>
-                            <span>{item.points}</span>
-                        </div>
-                    )}
-                </div>
-            );            
         }  
     }
 }
