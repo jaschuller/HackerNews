@@ -90,6 +90,23 @@ import './App.css';
     const newArray = array.map(function (x) { return x * 2; });
     console.log(newArray);
 
+// Higher-order Function: We need to pass a value to a function, and return a new function to evaluate a condition based on that value 
+function isSearched_OldVersion(searchTerm) {
+    return function (item) {
+        // some condition which returns true or false
+        // ES5 version using indexOf. If whats typed into searchTerm is contained within
+        // the title, the index returns. If not -1 will return. Therefore return false when searchTerm does
+        // not exist within title
+        return item.title.toLowerCase().indexOf(searchTerm.toLowerCase()) !== -1;
+    }
+}
+
+// Higher-order Function: We need to pass a value to a function, and return a new function to evaluate a condition based on that value
+// functionaly the same as above, but written concisely using arrow function
+const isSearched = searchTerm => item =>
+    // includes is an ES6 feature
+    item.title.toLowerCase().includes(searchTerm.toLowerCase());
+
 // App is a derived class since it extends component
 class App extends Component {
     
@@ -111,10 +128,13 @@ class App extends Component {
             // ES6 Object Initializer, when the property name in your object is the same as your variable name, you can do the following
             desert,
             list,
+            // set initial search state
+            searchTerm: '',
         }
         
         // the method is bound to the class (which is why is uses this) and thus becomes a class method
         this.onDismiss = this.onDismiss.bind(this);
+        this.onSearchChange = this.onSearchChange.bind(this);
     }
 
     // Combined with the button that calls onDismiss, this is an example of the Unidirectional data flow of React
@@ -135,6 +155,16 @@ class App extends Component {
         // use setState to update the state with the new list, containing all items except for the one that matched the 
         // id if the list element clicked
         this.setState({list: updatedList});
+    }
+
+    // When using a handler in your element, you get access to the synthetic React event in your callback function's signatureate
+    // the event has the value of the input field in its target object, so you can update the local state with a search term
+    // using this.setState()
+    onSearchChange(event) {
+        // Reacts setState is a shallow merge, which means that it preserves the values of sibling properties 
+        // in the state object when it updates a property 
+        this.setState({searchTerm: event.target.value})
+        console.log(event.target.value);
     }
         
     render() {   
@@ -165,7 +195,14 @@ class App extends Component {
         if(basicOrArrow === "arrow") {
             return (
                 // Use JSX to render the JavaScript variables and object into HTML                       
-                <div className="App">
+                <div className="App">                                                        
+                    <form>
+                        <input 
+                            type="text"
+                            onChange={this.onSearchChange} 
+                        />
+                    </form>
+                                        
                     <h2>{helloWorld}</h2>
                     <div> Welcome user {user.userName}</div>
                     <div> {user.firstName} {user.lastName} Age: {user.age}</div>
@@ -173,7 +210,9 @@ class App extends Component {
                     <div> In the year {this.state.theyear} it is {isAccurate} that {dinner} and {this.state.dinner} will be on the {doesntExist} {notdefined}</div> 
                     <div> Then we will have some {this.state.desert}!</div>
                     
-                    {this.state.list.map(item => {
+                    {/* filter the list elements by the search term, then map whats left into item objects */}
+                    {this.state.list.filter(isSearched(this.state.searchTerm)).map(item => {
+                    
                             // Event handling: pass this function into the onClick for the button
                             // Alternatively you can define the function inline as shown for "Dismiss inline" 
                             const onHandleDismiss = () => this.onDismiss(item.objectID);
