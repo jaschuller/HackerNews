@@ -130,7 +130,7 @@ class App extends Component {
         */
         
         // whole function can be defined in a single line with the disadvantage that it might be less readable
-        const updatedList = this.state.list.filter(item => item.objectID != id);
+        const updatedList = this.state.list.filter(item => item.objectID !== id);
         
         // use setState to update the state with the new list, containing all items except for the one that matched the 
         // id if the list element clicked
@@ -173,30 +173,66 @@ class App extends Component {
                     <div> In the year {this.state.theyear} it is {isAccurate} that {dinner} and {this.state.dinner} will be on the {doesntExist} {notdefined}</div> 
                     <div> Then we will have some {this.state.desert}!</div>
                     
-                    {this.state.list.map(item => 
-                        // Use built in JavaScript map functionality in JSX, which iterates over a list of items to display them according to specific attributes
-                        // IMPORTANT by specifying a unique key, you are helping React embrace its full potential, in that it can identify modified items
-                        // when the list changes. Also you will see a warning about each item needing a unique key in the console if one is not provided. Make
-                        // sure that the key is stable (not something like list index, which is prove to change if items in list are reordered)
-                        
-                        // item => { replaces the need for function(item) {
-                        // by ommiting the { after => we create a concise body. The return is implied and therefore return { } around the content is not needed                       
-                        <div key={item.objectID}>
-                            <span>
-                                <a href={item.url}>{item.title}</a>
-                            </span>
-                            <span> Author: {item.author}</span>
-                            <span> Comments: {item.num_comments}</span>
-                            <span> Points: {item.points}</span>
-                            <span>
-                                <button
-                                    onClick={() => this.onDismiss(item.objectID)}
-                                    type="button"
-                                >
-                                  Dismiss
-                                </button>
-                            </span>
-                        </div>
+                    {this.state.list.map(item => {
+                            // Event handling: pass this function into the onClick for the button
+                            // Alternatively you can define the function inline as shown for "Dismiss inline" 
+                            const onHandleDismiss = () => this.onDismiss(item.objectID);
+                            
+                            // Use built in JavaScript map functionality in JSX, which iterates over a list of items to display them according to specific attributes
+                            // IMPORTANT by specifying a unique key, you are helping React embrace its full potential, in that it can identify modified items
+                            // when the list changes. Also you will see a warning about each item needing a unique key in the console if one is not provided. Make
+                            // sure that the key is stable (not something like list index, which is prove to change if items in list are reordered)
+                            
+                            // item => { replaces the need for function(item) {
+                            return (
+                                <div key={item.objectID}>
+                                    <span>
+                                        <a href={item.url}>{item.title}</a>
+                                    </span>
+                                    <span> Author: {item.author}</span>
+                                    <span> Comments: {item.num_comments}</span>
+                                    <span> Points: {item.points}</span>
+                                    <span>
+                                        <button
+                                            onClick={onHandleDismiss}
+                                            type="button"
+                                        >
+                                        Dismiss
+                                        </button>                                        
+                                        <button
+                                            onClick={()=>this.onDismiss(item.objectID)}
+                                            type="button"
+                                        >
+                                        Dismiss inline
+                                        </button>
+                                    </span>
+                                    <span>
+                                        <button
+                                            onClick={console.log("this runs when the application is opened in the browser, not on button click: " + item.objectID)}
+                                            type="button"
+                                        >
+                                        On app load
+                                        </button>
+                                    </span>
+                                    <span>
+                                        <button
+                                            onClick={function() {
+                                                console.log("since this is a function it works on click " + item.objectID);
+                                            }}
+                                            type="button"
+                                        >
+                                        On click
+                                        </button>
+                                        <button
+                                            onClick={()=> console.log("same as above but using arrow function " + item.objectID)}
+                                            type="button"
+                                        >
+                                        Another way
+                                        </button>                                        
+                                    </span>                                                                        
+                                </div>
+                            );
+                        }
                     )}
                 </div>
             );            

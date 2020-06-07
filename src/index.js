@@ -10,10 +10,10 @@ import Counter from './Counter';
 // integrat React in any foreign application easily, and you can use ReactDOM.render()
 // multiple times im your application. In a plain React application you would only use it
 // once to bootstrap the component tree
-//ReactDOM.render(<App />, document.getElementById('root'));
+ReactDOM.render(<App />, document.getElementById('root'));
 
 // Bindings demonstration
-ReactDOM.render(<ExplainBindingsComponent />, document.getElementById('root'));
+// ReactDOM.render(<ExplainBindingsComponent />, document.getElementById('root'));
 
 // Concise class field declarations
 // ReactDOM.render(<Counter />, document.getElementById('root'));
