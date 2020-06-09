@@ -12,6 +12,36 @@ import './App.css';
     const user = {
         [key]: 'Robin',
     };
+
+    var animals = {
+        dog: "mutt",
+        fish: "guppy",
+    }
+
+    // ES6 destructing assignment lets you unpack values from arrays, or properties from objects,
+    // into destinct variables.
+    // ES6 Destructuring provides easier access to properties in objects and arrays
+    // const {dog, fish} = animals; object can be done in only one line!
+    // better tp use multilines for readability though
+    const {
+        dog,
+        fish,
+    } = animals;
+    console.log("ES6 " + dog + " " + fish); // variable names have to match
+
+    // ES5 version
+    var mydog = animals.dog;
+    var myguppy = animals.fish;
+    console.log("ES5 " + mydog + " " + myguppy);
+
+    // also works with arrays, names do not have to match for arrays
+    const users = ['Justin', 'Ben', 'Spencer'];
+    const [
+        userOne,
+        userTwo,
+        userThree
+    ] = users;
+    console.log("users: " + userOne + " " + userTwo + " " + userThree);
     
     // ES5
     var userServiceES5 = {
@@ -167,7 +197,16 @@ class App extends Component {
         console.log(event.target.value);
     }
         
-    render() {   
+    render() { 
+        
+        // ES6 use destructuring to set values
+        const { searchTerm, list } = this.state;
+
+        // ES5 way would look like this
+        /* 
+            var searchTerm = this.state.searchTerm;
+            var list = this.state.list;
+        */
             
         // JavaScript primitives
         var dinner = "Turkey"; //string        
@@ -211,7 +250,7 @@ class App extends Component {
                     <div> Then we will have some {this.state.desert}!</div>
                     
                     {/* filter the list elements by the search term, then map whats left into item objects */}
-                    {this.state.list.filter(isSearched(this.state.searchTerm)).map(item => {
+                    {list.filter(isSearched(searchTerm)).map(item => {
                     
                             // Event handling: pass this function into the onClick for the button
                             // Alternatively you can define the function inline as shown for "Dismiss inline" 
