@@ -233,11 +233,20 @@ class App extends Component {
         
         if(basicOrArrow === "arrow") {
             return (
-                // Use JSX to render the JavaScript variables and object into HTML                       
+                // Use JSX to render the JavaScript variables and object into HTML
+                // IMPORTANT Controlled Components vs Uncontrolled Components
+                // Form elements such as <input>, <textarea>, and <select> hold their own
+                // state in plain HTML. They modify the value internally once someonce changes
+                // it from the outside. In React, thats called an uncontrolled component, because
+                // it handles its own state. We want to make sure those elemens are controlled components
+                // instead. Therefore we will set value of the input, set value={searchTerm}                       
+                // This creates a self-contained unidirectional data flow loop, and the local component state
+                // is the single source of truth for the input field. 
                 <div className="App">                                                        
                     <form>
                         <input 
                             type="text"
+                            value={searchTerm}
                             onChange={this.onSearchChange} 
                         />
                     </form>
