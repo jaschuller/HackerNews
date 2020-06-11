@@ -117,13 +117,15 @@ class App extends Component {
                 // instead. Therefore we will set value of the input, set value={searchTerm}                       
                 // This creates a self-contained unidirectional data flow loop, and the local component state
                 // is the single source of truth for the input field. 
-                <div className="App">
-                    <Search 
-                        value={searchTerm}
-                        onChange={this.onSearchChange}    
-                    >
-                        Filter by
-                    </Search>
+                <div className="page">
+                    <div className="interactions">
+                        <Search 
+                            value={searchTerm}
+                            onChange={this.onSearchChange}    
+                        >
+                            Filter by
+                        </Search>
+                    </div>
                     <Table 
                         list={list}
                         pattern={searchTerm}
@@ -174,17 +176,29 @@ const Button = ({onClick, className, children}) =>
         </button>        
 
 
+const largeColumn = {
+    width: '40%',
+}
+
+const midColumn = {
+    width: '30%',
+}
+
+const smallColumn = {
+    width: '10%',
+}
+
 const Table = ({list, pattern, onDismiss}) =>
-        <div>
+        <div className="table">
             {list.filter(isSearched(pattern)).map(item =>
-                <div key={item.objectID}>
-                    <span>
+                <div key={item.objectID} className="table-row">
+                    <span style={largeColumn}>
                         <a href={item.url}>{item.title}</a>
                     </span>
-                    <span> Author: {item.author}</span>
-                    <span> Comments: {item.num_comments}</span>
-                    <span> Points: {item.points}</span>
-                    <span>
+                    <span style={midColumn}> Author: {item.author}</span>
+                    <span style={smallColumn}> Comments: {item.num_comments}</span>
+                    <span style={smallColumn}> Points: {item.points}</span>
+                    <span style={smallColumn}>
                         <Button
                             onClick={() => onDismiss(item.objectID)}
                         >
