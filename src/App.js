@@ -26,7 +26,6 @@ import './App.css';
       
 
 // Higher-order Function: We need to pass a value to a function, and return a new function to evaluate a condition based on that value
-// functionaly the same as above, but written concisely using arrow function
 const isSearched = searchTerm => item =>
     // includes is an ES6 feature
     item.title.toLowerCase().includes(searchTerm.toLowerCase());
@@ -42,10 +41,9 @@ class App extends Component {
         super(props);
         
         // state is bound to the class using the this object, so you can access the local state of the whole
-        // component. For instance it can be used in the render() method. Using list in this way retrieves if from the local
-        // state of the component
+        // component. For instance it can be used in the render() method.
         
-        // the first variable is the one that will be in the state, set to the value of the second one
+        // various ways of setting state
         this.state = {            
             theyear: year,
             dinner: "Lobster",
@@ -123,7 +121,9 @@ class App extends Component {
                     <Search 
                         value={searchTerm}
                         onChange={this.onSearchChange}    
-                    />
+                    >
+                        Filter by
+                    </Search>
                     <Table 
                         list={list}
                         pattern={searchTerm}
@@ -141,47 +141,58 @@ class App extends Component {
     }
 }
 
-class Search extends Component {
-    render() {
-        const { value, onChange} = this.props;
-        return (
-            <form>
-                <input
-                    type="text"
-                    value={value}
-                    onChange={onChange}
-                />
-            </form>
-        );
-    }
-}
+// Composable Components: by passing children prop ("Filter by" used here) the Search 
+// component can destructure the children property from the props object and specify
+// where it should be displayed (next to the input in this scenario)
+// In this way when the Search component is used elsewhere, you can use different entities, since
+// it is not just text that can be passed as children. The children property also makes it possible
+// to weave components into each other
+//
+// Functional Stateless Component: functions that take an input and return an output
+// the inputs are props, and the output is a component instance in plain JSX
+// You cannot update the state because there is no this object
+// Additionally, they have no lifecycle methods except for the render() method which is applied implicitly
+//
+// if we needed to do more with state, we could refactor this into an ES6 functional component
+// Use destructuring in the function signature as best practice
+const Search = ({value, onChange, children}) =>
+        <form>
+            {children} <input
+                type="text"
+                value={value}
+                onChange={onChange}
+            />
+        </form>
 
-class Table extends Component {
-    render() {
-        const { list, pattern, onDismiss } = this.props;
-        return (
-            <div>
-                {list.filter(isSearched(pattern)).map(item =>
-                    <div key={item.objectID}>
-                        <span>
-                            <a href={item.url}>{item.title}</a>
-                        </span>
-                        <span> Author: {item.author}</span>
-                        <span> Comments: {item.num_comments}</span>
-                        <span> Points: {item.points}</span>
-                        <span>                                        
-                            <button
-                                onClick={() => onDismiss(item.objectID)}
-                                type="button"
-                            >
+const Button = ({onClick, className, children}) =>
+        <button
+            onClick={onClick}
+            className={className}
+            type="button"
+        >
+            {children}
+        </button>        
+
+
+const Table = ({list, pattern, onDismiss}) =>
+        <div>
+            {list.filter(isSearched(pattern)).map(item =>
+                <div key={item.objectID}>
+                    <span>
+                        <a href={item.url}>{item.title}</a>
+                    </span>
+                    <span> Author: {item.author}</span>
+                    <span> Comments: {item.num_comments}</span>
+                    <span> Points: {item.points}</span>
+                    <span>
+                        <Button
+                            onClick={() => onDismiss(item.objectID)}
+                        >
                             Dismiss
-                            </button>
-                        </span>                                                                        
-                    </div>
-                )}
-            </div>
-        );
-    }
-}
+                        </Button>                                        
+                    </span>                                                                        
+                </div>
+            )}
+        </div>
 
 export default App;
