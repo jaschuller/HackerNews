@@ -1,6 +1,16 @@
 import React, { Component } from 'react';
 import './App.css';
 
+const DEFAULT_QUERY = 'redux';
+
+const PATH_BASE = 'https://hn.algolia.com/api/v1';
+const PATH_SEARCH = '/search';
+const PARAM_SEARCH = 'query=';
+
+// ES6 Template literal: useful for string concatenation or interpolation
+const url = `${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${DEFAULT_QUERY}`;
+console.log(url);
+
     // Sample data which will be fetched from an API later on
     const list = [
         {
@@ -35,6 +45,8 @@ class App extends Component {
     
     // calling super(props) from Component sets this.props so that we can access
     // properties using this.props (they would be undefined otherwise) in the constructor
+    // Constructor: Lifecycle method which is only called when an instance of the component is created and inserted
+    // into the DOM. The component gets instantiated in a process called mounting.
     constructor(props) {
         
         // super.method calls the parent method. super(...) here calls the parent constructor
@@ -44,31 +56,68 @@ class App extends Component {
         // component. For instance it can be used in the render() method.
         
         // various ways of setting state
-        this.state = {            
+        this.state = {
+            result: null,
+            // set initial search state
+            searchTerm: DEFAULT_QUERY,
             theyear: year,
             dinner: "Lobster",
             // ES6 Object Initializer, when the property name in your object is the same as your variable name, you can do the following
             desert,
             list,
-            // set initial search state
-            searchTerm: '',
-        }
+        };
         
         // the method is bound to the class (which is why is uses this) and thus becomes a class method
+        this.setSearchTopStories = this.setSearchTopStories.bind(this);
         this.onDismiss = this.onDismiss.bind(this);
         this.onSearchChange = this.onSearchChange.bind(this);
+    }
+
+    setSearchTopStories(result) {
+        this.setState({ result });
+    }
+
+    // componentDidMount is one of the lifecycle methods. It is called once, when the component is mounted (put into the DOM). 
+    componentDidMount() {
+        const { searchTerm } = this.state;
+
+        fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}`)
+            .then(response => response.json())
+            .then(result => this.setSearchTopStories(result))
+            .catch(error => error);
     }
 
     // Combined with the button that calls onDismiss, this is an example of the Unidirectional data flow of React
     // An action is triggered in the view layer with onClick(), a function or class method modified the local component state,
     // and then the render() method of the component runs again to update the view.
     onDismiss(id) {
+
+        const isNotId = item => item.objectID !== id;
+
         // whole function can be defined in a single line with the disadvantage that it might be less readable
-        const updatedList = this.state.list.filter(item => item.objectID !== id);
+        const updatedHits = this.state.result.hits.filter(isNotId);
         
+        // React embraces immutable data structures, so we don't want to mutate an object (or mutate the state directly).
+        // We want to generate a new object based on the information given, so none of the objects get altered and we keep the immutable 
+        // data structures. You will always return a new object, but never alter the original object
+        //
+        // For this, we use JavaScript ES6's Object.assign(). It taks a target bjects as first argument. All following arguments
+        // are source objects, which are merged into the target object. The target object can be an empty object. It embraces immutability,
+        // because no source object gets mutated.
+        //
+        // Source objects wtill override previously merged objects with the same property name.
+        // const updatedResult = Object.assign({}, this.state.result, updatedHits);
+
+
         // use setState to update the state with the new list, containing all items except for the one that matched the 
         // id if the list element clicked
-        this.setState({list: updatedList});
+        this.setState({
+            // result: Object.assign({}, this.state.result, {hits:updatedHits})
+            // Can also be done with object spread operator (its not ES6, it is part of proposal for next JS version, and already being
+            // used by the React community). Works just like the JS ES6 array spread operator, but for objects. Each key value pair is copied
+            // into a new object.
+            result: {...this.state.result, hits: updatedHits}
+        });
     }
 
     // When using a handler in your element, you get access to the synthetic React event in your callback function's signatureate
@@ -84,7 +133,11 @@ class App extends Component {
     render() { 
         
         // ES6 use destructuring to set values
-        const { searchTerm, list } = this.state;
+        const { searchTerm, result } = this.state;
+
+        if (!result) { return null; }
+        console.log("The state is: " + this.state);
+
             
         // JavaScript primitives
         var dinner = "Turkey"; //string        
@@ -111,9 +164,9 @@ class App extends Component {
                 // Use JSX to render the JavaScript variables and object into HTML
                 // IMPORTANT Controlled Components vs Uncontrolled Components
                 // Form elements such as <input>, <textarea>, and <select> hold their own
-                // state in plain HTML. They modify the value internally once someonce changes
+                // state in plain HTML. They modify the value internally once someone changes
                 // it from the outside. In React, thats called an uncontrolled component, because
-                // it handles its own state. We want to make sure those elemens are controlled components
+                // it handles its own state. We want to make sure those elements are controlled components
                 // instead. Therefore we will set value of the input, set value={searchTerm}                       
                 // This creates a self-contained unidirectional data flow loop, and the local component state
                 // is the single source of truth for the input field. 
@@ -127,7 +180,7 @@ class App extends Component {
                         </Search>
                     </div>
                     <Table 
-                        list={list}
+                        list={result.hits}
                         pattern={searchTerm}
                         onDismiss={this.onDismiss}
                     />                                         
