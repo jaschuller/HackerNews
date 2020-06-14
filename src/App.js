@@ -31,8 +31,16 @@ console.log(url);
         }
     ];
     
-    var year = 2020; //number 
-    var desert = "cake";
+var year = 2020; //number 
+var desert = "cake";
+
+// Conditional Rendering
+// logical && operator, this will always evaluate to 'Hello World'
+const myresult = true && 'Hello World';
+console.log(myresult);
+// logical && operator, this will always evaluate to 'false'
+const myotherresult = false && 'Goodbye World';
+console.log(myotherresult);
       
 
 // Higher-order Function: We need to pass a value to a function, and return a new function to evaluate a condition based on that value
@@ -179,11 +187,16 @@ class App extends Component {
                             Filter by
                         </Search>
                     </div>
-                    <Table 
+                    {/* Ternary Operator: if results exists, do one thing, otherwise do */}
+                    { result 
+                      ? <Table 
                         list={result.hits}
                         pattern={searchTerm}
                         onDismiss={this.onDismiss}
-                    />                                         
+                    />
+                        : null
+                    }
+                                         
                                         
                     <h2>{helloWorld}</h2>
                     <div> Welcome user {user.userName}</div>
