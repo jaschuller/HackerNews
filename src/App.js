@@ -41,12 +41,6 @@ console.log(myresult);
 // logical && operator, this will always evaluate to 'false'
 const myotherresult = false && 'Goodbye World';
 console.log(myotherresult);
-      
-
-// Higher-order Function: We need to pass a value to a function, and return a new function to evaluate a condition based on that value
-const isSearched = searchTerm => item =>
-    // includes is an ES6 feature
-    item.title.toLowerCase().includes(searchTerm.toLowerCase());
 
 // App is a derived class since it extends component
 class App extends Component {
@@ -77,7 +71,9 @@ class App extends Component {
         
         // the method is bound to the class (which is why is uses this) and thus becomes a class method
         this.setSearchTopStories = this.setSearchTopStories.bind(this);
+        this.fetchSearchTopStories = this.fetchSearchTopStories.bind(this);
         this.onDismiss = this.onDismiss.bind(this);
+        this.onSearchSubmit = this.onSearchSubmit.bind(this);
         this.onSearchChange = this.onSearchChange.bind(this);
     }
 
@@ -85,15 +81,12 @@ class App extends Component {
         this.setState({ result });
     }
 
-    // componentDidMount is one of the lifecycle methods. It is called once, when the component is mounted (put into the DOM). 
-    componentDidMount() {
-        const { searchTerm } = this.state;
-
+    fetchSearchTopStories(searchTerm) {
         fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}`)
             .then(response => response.json())
             .then(result => this.setSearchTopStories(result))
             .catch(error => error);
-    }
+    }    
 
     // Combined with the button that calls onDismiss, this is an example of the Unidirectional data flow of React
     // An action is triggered in the view layer with onClick(), a function or class method modified the local component state,
@@ -126,7 +119,16 @@ class App extends Component {
             // into a new object.
             result: {...this.state.result, hits: updatedHits}
         });
+    }    
+
+    // componentDidMount is one of the lifecycle methods. It is called once, when the component is mounted (put into the DOM).
+    // fetch the top stories when the element is first mounted 
+    componentDidMount() {
+        const { searchTerm } = this.state;
+        this.fetchSearchTopStories(searchTerm);
     }
+
+
 
     // When using a handler in your element, you get access to the synthetic React event in your callback function's signatureate
     // the event has the value of the input field in its target object, so you can update the local state with a search term
@@ -137,6 +139,17 @@ class App extends Component {
         this.setState({searchTerm: event.target.value})
         console.log(event.target.value);
     }
+
+    // fetch the top stories whenever search is submitted
+    onSearchSubmit(event) {
+        const { searchTerm } = this.state;
+        this.fetchSearchTopStories(searchTerm);
+
+        // if you try to search without this, the browser will reload. That's a native browser behavior
+        // for a submit callback in an HTML form. In React, you will often come across the preventDefault()
+        // event method to suppress the native browser behavior
+        event.preventDefault();
+    }    
         
     render() { 
         
@@ -182,7 +195,8 @@ class App extends Component {
                     <div className="interactions">
                         <Search 
                             value={searchTerm}
-                            onChange={this.onSearchChange}    
+                            onChange={this.onSearchChange}
+                            onSubmit={this.onSearchSubmit}    
                         >
                             Filter by
                         </Search>
@@ -191,7 +205,6 @@ class App extends Component {
                     { result 
                       ? <Table 
                         list={result.hits}
-                        pattern={searchTerm}
                         onDismiss={this.onDismiss}
                     />
                         : null
@@ -223,13 +236,21 @@ class App extends Component {
 //
 // if we needed to do more with state, we could refactor this into an ES6 functional component
 // Use destructuring in the function signature as best practice
-const Search = ({value, onChange, children}) =>
-        <form>
-            {children} <input
+const Search = ({
+        value, 
+        onChange,
+        onSubmit, 
+        children
+    }) =>
+        <form onSubmit={onSubmit}>
+             <input
                 type="text"
                 value={value}
                 onChange={onChange}
             />
+            <button type="submit">
+                {children}
+            </button>
         </form>
 
 const Button = ({onClick, className, children}) =>
@@ -254,9 +275,9 @@ const smallColumn = {
     width: '10%',
 }
 
-const Table = ({list, pattern, onDismiss}) =>
+const Table = ({list, onDismiss}) =>
         <div className="table">
-            {list.filter(isSearched(pattern)).map(item =>
+            {list.map(item =>
                 <div key={item.objectID} className="table-row">
                     <span style={largeColumn}>
                         <a href={item.url}>{item.title}</a>
