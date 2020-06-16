@@ -2,45 +2,13 @@ import React, { Component } from 'react';
 import './App.css';
 
 const DEFAULT_QUERY = 'redux';
+const DEFAULT_HPP = '100'; // number of results returned per page of pagination
 
 const PATH_BASE = 'https://hn.algolia.com/api/v1';
 const PATH_SEARCH = '/search';
 const PARAM_SEARCH = 'query=';
-
-// ES6 Template literal: useful for string concatenation or interpolation
-const url = `${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${DEFAULT_QUERY}`;
-console.log(url);
-
-    // Sample data which will be fetched from an API later on
-    const list = [
-        {
-            title: 'React',
-            url: 'https://reactjs.org/',
-            author: 'Jordan Walke',
-            num_comments: 3,
-            points: 4,
-            objectID: 0,
-        },
-        {
-            title: 'Redux',
-            url: 'https://redux.js.org',
-            author: 'Dan Abromov, Andrew Clark',
-            num_comments: 2,
-            points: 5,
-            objectID: 1,
-        }
-    ];
-    
-var year = 2020; //number 
-var desert = "cake";
-
-// Conditional Rendering
-// logical && operator, this will always evaluate to 'Hello World'
-const myresult = true && 'Hello World';
-console.log(myresult);
-// logical && operator, this will always evaluate to 'false'
-const myotherresult = false && 'Goodbye World';
-console.log(myotherresult);
+const PARAM_PAGE = 'page=';
+const PARAM_HPP = 'hitsPerPage=';
 
 // App is a derived class since it extends component
 class App extends Component {
@@ -62,11 +30,6 @@ class App extends Component {
             result: null,
             // set initial search state
             searchTerm: DEFAULT_QUERY,
-            theyear: year,
-            dinner: "Lobster",
-            // ES6 Object Initializer, when the property name in your object is the same as your variable name, you can do the following
-            desert,
-            list,
         };
         
         // the method is bound to the class (which is why is uses this) and thus becomes a class method
@@ -78,11 +41,26 @@ class App extends Component {
     }
 
     setSearchTopStories(result) {
-        this.setState({ result });
+        const { hits, page } = result;
+
+        const oldHits = page !== 0
+            ? this.state.result.hits
+            : [];
+
+        const updatedHits = [
+            ...oldHits,
+            ...hits
+        ];
+
+        this.setState({ 
+            result: { hits: updatedHits, page } 
+        });
     }
 
-    fetchSearchTopStories(searchTerm) {
-        fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}`)
+    fetchSearchTopStories(searchTerm, page = 0) {
+        // the page argument uses JavaScript ES6 default parameter to introduce the fallback to page 0
+        // in case no defined page argument is provided for the function
+        fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}${page}&${PARAM_HPP}${DEFAULT_HPP}`)
             .then(response => response.json())
             .then(result => this.setSearchTopStories(result))
             .catch(error => error);
@@ -128,8 +106,6 @@ class App extends Component {
         this.fetchSearchTopStories(searchTerm);
     }
 
-
-
     // When using a handler in your element, you get access to the synthetic React event in your callback function's signatureate
     // the event has the value of the input field in its target object, so you can update the local state with a search term
     // using this.setState()
@@ -155,70 +131,43 @@ class App extends Component {
         
         // ES6 use destructuring to set values
         const { searchTerm, result } = this.state;
+        const page = (result && result.page) || 0;        
 
-        if (!result) { return null; }
-        console.log("The state is: " + this.state);
-
-            
-        // JavaScript primitives
-        var dinner = "Turkey"; //string        
-        var isAccurate = true; //boolean
-        var doesntExist = null;
-        var notdefined = undefined;
+        if (!result) { return null; }                    
         
-        // JavaScript object
-        var user = {
-            userName: "jdoe",
-            firstName: "John",
-            lastName: "Doe",
-            age: "41"
-        }
-                    
-        // const and let
-        // In JavaScript ES6, you will rarely find var used anymore
-        // Variables declared directly with const cannot be changed, however when the variable is
-        // an array or object the values it holds can get updated through indirect means
-        // Variables declared with let can be changed
-        const helloWorld = 'Welcome to the Road to learn React';
-        
-            return (
-                // Use JSX to render the JavaScript variables and object into HTML
-                // IMPORTANT Controlled Components vs Uncontrolled Components
-                // Form elements such as <input>, <textarea>, and <select> hold their own
-                // state in plain HTML. They modify the value internally once someone changes
-                // it from the outside. In React, thats called an uncontrolled component, because
-                // it handles its own state. We want to make sure those elements are controlled components
-                // instead. Therefore we will set value of the input, set value={searchTerm}                       
-                // This creates a self-contained unidirectional data flow loop, and the local component state
-                // is the single source of truth for the input field. 
-                <div className="page">
-                    <div className="interactions">
-                        <Search 
-                            value={searchTerm}
-                            onChange={this.onSearchChange}
-                            onSubmit={this.onSearchSubmit}    
-                        >
-                            Filter by
-                        </Search>
-                    </div>
-                    {/* Ternary Operator: if results exists, do one thing, otherwise do */}
-                    { result 
-                      ? <Table 
-                        list={result.hits}
-                        onDismiss={this.onDismiss}
-                    />
-                        : null
-                    }
-                                         
-                                        
-                    <h2>{helloWorld}</h2>
-                    <div> Welcome user {user.userName}</div>
-                    <div> {user.firstName} {user.lastName} Age: {user.age}</div>
-                    <br/>
-                    <div> In the year {this.state.theyear} it is {isAccurate} that {dinner} and {this.state.dinner} will be on the {doesntExist} {notdefined}</div> 
-                    <div> Then we will have some {this.state.desert}!</div>
+        return (
+            // Use JSX to render the JavaScript variables and object into HTML
+            // IMPORTANT Controlled Components vs Uncontrolled Components
+            // Form elements such as <input>, <textarea>, and <select> hold their own
+            // state in plain HTML. They modify the value internally once someone changes
+            // it from the outside. In React, thats called an uncontrolled component, because
+            // it handles its own state. We want to make sure those elements are controlled components
+            // instead. Therefore we will set value of the input, set value={searchTerm}                       
+            // This creates a self-contained unidirectional data flow loop, and the local component state
+            // is the single source of truth for the input field. 
+            <div className="page">
+                <div className="interactions">
+                    <Search 
+                        value={searchTerm}
+                        onChange={this.onSearchChange}
+                        onSubmit={this.onSearchSubmit}    
+                    >
+                        Filter by
+                    </Search>
                 </div>
-            );             
+                { result && 
+                    <Table 
+                    list={result.hits}
+                    onDismiss={this.onDismiss}
+                />
+                }
+                <div className="interactions">
+                    <Button onClick={() => this.fetchSearchTopStories(searchTerm, page + 1)}>
+                        More
+                    </Button>
+                </div>
+            </div>
+        );             
     }
 }
 
