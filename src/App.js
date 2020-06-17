@@ -5,6 +5,8 @@ const DEFAULT_QUERY = 'redux';
 const DEFAULT_HPP = '20'; // number of results returned per page of pagination
 
 const PATH_BASE = 'https://hn.algolia.com/api/v1';
+// change path base to an incorrect url like below to test error handling
+// const PATH_BASE = 'https://hn.algolia.com/api/v1xxxx';
 const PATH_SEARCH = '/search';
 const PARAM_SEARCH = 'query=';
 const PARAM_PAGE = 'page=';
@@ -39,6 +41,7 @@ class App extends Component {
             searchKey: '',
             // set initial search state
             searchTerm: DEFAULT_QUERY,
+            error: null,
         };
         
         // the method is bound to the class (which is why is uses this) and thus becomes a class method
@@ -92,7 +95,7 @@ class App extends Component {
         fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}${page}&${PARAM_HPP}${DEFAULT_HPP}`)
             .then(response => response.json())
             .then(result => this.setSearchTopStories(result))
-            .catch(error => error);
+            .catch(error => this.setState({ error }));
     }    
 
     // Combined with the button that calls onDismiss, this is an example of the Unidirectional data flow of React
@@ -178,6 +181,7 @@ class App extends Component {
             searchTerm, 
             results,
             searchKey,
+            error,
         } = this.state;
 
         const page = (
@@ -190,7 +194,7 @@ class App extends Component {
             results &&
             results[searchKey] &&
             results[searchKey].hits
-        ) || [];                   
+        ) || [];
         
         return (
             // Use JSX to render the JavaScript variables and object into HTML
@@ -212,7 +216,11 @@ class App extends Component {
                         Filter by
                     </Search>
                 </div>
-                { <Table 
+                { error
+                ? <div className="interactions">
+                    Something went wrong
+                </div>
+                : <Table 
                     list={list}
                     onDismiss={this.onDismiss}
                 />
