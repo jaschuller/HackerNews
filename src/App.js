@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import './App.css';
 
 const DEFAULT_QUERY = 'redux';
-const DEFAULT_HPP = '100'; // number of results returned per page of pagination
+const DEFAULT_HPP = '20'; // number of results returned per page of pagination
 
 const PATH_BASE = 'https://hn.algolia.com/api/v1';
 const PATH_SEARCH = '/search';
@@ -25,14 +25,24 @@ class App extends Component {
         // state is bound to the class using the this object, so you can access the local state of the whole
         // component. For instance it can be used in the render() method.
         
-        // various ways of setting state
+        // We want to cache the various searches performed, therefore
+        // change result into results object and use searchKey to retrieve the cache
+        // searchKey has to be set before each request is made, it reflects the searchTerm
+        //
+        // *Understanding why we don't use searchTerm here is critical. The searchTerm is a fluctuant variable, 
+        // because it gets changed every time you type into the search input field. We want a non fluctuant variable that
+        // determines the recent submitted search term to the API and can be used to retrieve the correct result from a map
+        // or results. It is a pointer toyour current result in the cache, which can be used to display the current result
+        // in the render() method 
         this.state = {
-            result: null,
+            results: null,
+            searchKey: '',
             // set initial search state
             searchTerm: DEFAULT_QUERY,
         };
         
         // the method is bound to the class (which is why is uses this) and thus becomes a class method
+        this.needsToSeachTopStories = this.needsToSeachTopStories.bind(this);
         this.setSearchTopStories = this.setSearchTopStories.bind(this);
         this.fetchSearchTopStories = this.fetchSearchTopStories.bind(this);
         this.onDismiss = this.onDismiss.bind(this);
@@ -40,11 +50,22 @@ class App extends Component {
         this.onSearchChange = this.onSearchChange.bind(this);
     }
 
-    setSearchTopStories(result) {
-        const { hits, page } = result;
+    needsToSeachTopStories(searchTerm) {
+        // if key value pair exists in results, return false. 
+        // Otherwise return true since result data is not cached and we will need to execute fetch        
+        return !this.state.results[searchTerm];
+    }
 
-        const oldHits = page !== 0
-            ? this.state.result.hits
+    setSearchTopStories(result) {
+        // retrieve the searchKey from component state. Remember that searchKey gets set
+        // on componentDidMount() and onSearchSubmit()
+        const { hits, page } = result;
+        const { searchKey, results } = this.state;
+
+        // old hits have to get merged with the new hits, but the old hits
+        // gets retrieved from the results map with the searchKey as key
+        const oldHits = results && results[searchKey]
+            ? results[searchKey].hits
             : [];
 
         const updatedHits = [
@@ -52,8 +73,16 @@ class App extends Component {
             ...hits
         ];
 
+        // set a new result into the results map in the state.
         this.setState({ 
-            result: { hits: updatedHits, page } 
+            results: { 
+                ...results, // spread all the results in state by searchKey, otherwise you would lose all the results you have stored before
+                // [searchKey] syntax - ES6 Computed property name. Expression in brackets is computed and used as the property name
+                // this is part of the ECMAScript 2015 object initializer syntax 
+                [searchKey]: { hits : updatedHits, page } // ensures that updated result is stored by searchKey in the results map
+                                                          // the value stored is an object with a hits and page property
+                                                          // this is the first step to enable cache
+            } 
         });
     }
 
@@ -71,10 +100,11 @@ class App extends Component {
     // and then the render() method of the component runs again to update the view.
     onDismiss(id) {
 
-        const isNotId = item => item.objectID !== id;
+        const { searchKey, results } = this.state;
+        const { hits, page } = results[searchKey];                
 
-        // whole function can be defined in a single line with the disadvantage that it might be less readable
-        const updatedHits = this.state.result.hits.filter(isNotId);
+        const isNotId = item => item.objectID !== id;
+        const updatedHits = hits.filter(isNotId);
         
         // React embraces immutable data structures, so we don't want to mutate an object (or mutate the state directly).
         // We want to generate a new object based on the information given, so none of the objects get altered and we keep the immutable 
@@ -88,6 +118,7 @@ class App extends Component {
         // const updatedResult = Object.assign({}, this.state.result, updatedHits);
 
 
+        // TODO update comments for new implementation
         // use setState to update the state with the new list, containing all items except for the one that matched the 
         // id if the list element clicked
         this.setState({
@@ -95,14 +126,21 @@ class App extends Component {
             // Can also be done with object spread operator (its not ES6, it is part of proposal for next JS version, and already being
             // used by the React community). Works just like the JS ES6 array spread operator, but for objects. Each key value pair is copied
             // into a new object.
-            result: {...this.state.result, hits: updatedHits}
+            results: {
+                ...results,
+                [searchKey]: {hits: updatedHits, page}
+            }
         });
     }    
 
     // componentDidMount is one of the lifecycle methods. It is called once, when the component is mounted (put into the DOM).
     // fetch the top stories when the element is first mounted 
     componentDidMount() {
+        console.log("mounting...");
         const { searchTerm } = this.state;
+
+        // set the searchKey for the initial search when component is rendered via against 'redux' search
+        this.setState({ searchKey : searchTerm }); 
         this.fetchSearchTopStories(searchTerm);
     }
 
@@ -119,7 +157,13 @@ class App extends Component {
     // fetch the top stories whenever search is submitted
     onSearchSubmit(event) {
         const { searchTerm } = this.state;
-        this.fetchSearchTopStories(searchTerm);
+
+        // set the searchKey whenever search is submitted using that search query string
+        this.setState({ searchKey : searchTerm });        
+        
+        if(this.needsToSeachTopStories(searchTerm)) {
+            this.fetchSearchTopStories(searchTerm);
+        }
 
         // if you try to search without this, the browser will reload. That's a native browser behavior
         // for a submit callback in an HTML form. In React, you will often come across the preventDefault()
@@ -130,10 +174,23 @@ class App extends Component {
     render() { 
         
         // ES6 use destructuring to set values
-        const { searchTerm, result } = this.state;
-        const page = (result && result.page) || 0;        
+        const { 
+            searchTerm, 
+            results,
+            searchKey,
+        } = this.state;
 
-        if (!result) { return null; }                    
+        const page = (
+            results && 
+            results[searchKey] &&
+            results[searchKey].page
+         ) || 0; 
+         
+        const list = (
+            results &&
+            results[searchKey] &&
+            results[searchKey].hits
+        ) || [];                   
         
         return (
             // Use JSX to render the JavaScript variables and object into HTML
@@ -155,14 +212,14 @@ class App extends Component {
                         Filter by
                     </Search>
                 </div>
-                { result && 
-                    <Table 
-                    list={result.hits}
+                { <Table 
+                    list={list}
                     onDismiss={this.onDismiss}
                 />
                 }
                 <div className="interactions">
-                    <Button onClick={() => this.fetchSearchTopStories(searchTerm, page + 1)}>
+                    {/* pass searchKey rather than searchTerm to the More button. Otherwise paginated fetch depends on searchTerm which is fluctuant */}
+                    <Button onClick={() => this.fetchSearchTopStories(searchKey, page + 1)}>
                         More
                     </Button>
                 </div>
