@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import axios from 'axios';
 import './App.css';
 
 const DEFAULT_QUERY = 'redux';
@@ -89,12 +90,28 @@ class App extends Component {
         });
     }
 
-    fetchSearchTopStories(searchTerm, page = 0) {
+    // Native Fetch: not all browsers suppport this, especially older browsers. Also when testing the application 
+    // in a headless browser there can be issues with the fetch API. There are a couple of ways to make fetch work in 
+    // older browsers (pollyfills) and in tests (isomorphic-fetch https://github.com/matthew-andrews/isomorphic-fetch)
+    fetchSearchTopStoriesOld(searchTerm, page = 0) {
         // the page argument uses JavaScript ES6 default parameter to introduce the fallback to page 0
         // in case no defined page argument is provided for the function
         fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}${page}&${PARAM_HPP}${DEFAULT_HPP}`)
             .then(response => response.json())
             .then(result => this.setSearchTopStories(result))
+            .catch(error => this.setState({ error }));
+    }
+    
+    // Axios instead of Fetch: Substitute the native Fetch API with Axios
+    // **run npm install axios if not found
+    // You dont have to transform the returned response into JSON anymore, since axious wraps the result into a data object in JavaScript
+    // axious() uses a HTTP GET by default. You can make the call explicit with axious.get(), or use another HTTP method such as HTTP POST
+    // with axio().post.
+    fetchSearchTopStories(searchTerm, page = 0) {
+        // the page argument uses JavaScript ES6 default parameter to introduce the fallback to page 0
+        // in case no defined page argument is provided for the function
+        axios(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}${page}&${PARAM_HPP}${DEFAULT_HPP}`)
+            .then(result => this.setSearchTopStories(result.data))
             .catch(error => this.setState({ error }));
     }    
 
