@@ -328,3 +328,9 @@ const Table = ({list, onDismiss}) =>
         </div>
 
 export default App;
+
+export {
+    Button,
+    Search,
+    Table,
+}
