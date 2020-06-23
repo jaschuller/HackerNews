@@ -29,6 +29,7 @@ exports[`App has a valid snapshop 1`] = `
     className="interactions"
   >
     <button
+      className=""
       onClick={[Function]}
       type="button"
     >
@@ -40,6 +41,7 @@ exports[`App has a valid snapshop 1`] = `
 
 exports[`Button has a valid snapshop 1`] = `
 <button
+  className=""
   type="button"
 >
   Give Me More
@@ -115,6 +117,7 @@ exports[`Table has a valid snapshop 1`] = `
       }
     >
       <button
+        className=""
         onClick={[Function]}
         type="button"
       >
@@ -174,6 +177,7 @@ exports[`Table has a valid snapshop 1`] = `
       }
     >
       <button
+        className=""
         onClick={[Function]}
         type="button"
       >
