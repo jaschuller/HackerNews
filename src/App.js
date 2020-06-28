@@ -115,7 +115,7 @@ class App extends Component {
     // with axio().post.
     fetchSearchTopStories(searchTerm, page = 0) {
         this.setState({ isLoading: true });
-        
+
         // the page argument uses JavaScript ES6 default parameter to introduce the fallback to page 0
         // in case no defined page argument is provided for the function
         axios(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}${page}&${PARAM_HPP}${DEFAULT_HPP}`)
@@ -252,20 +252,46 @@ class App extends Component {
                 />
                 }
                 <div className="interactions">
-                    { isLoading
-                      ? <Loading />
-                      : <Button onClick={() => this.fetchSearchTopStories(searchKey, page + 1)}>
-                          More
-                        </Button>
-                    }
+                    <ButtonWithLoading
+                      isLoading={isLoading}
+                      onClick={() => this.fetchSearchTopStories(searchKey, page + 1)}
+                    >
+                        More
+                    </ButtonWithLoading>
                 </div>
             </div>
         );             
     }
 }
 
+// It is a useful convention to prefix a HOC (Higher Order Component) with "with".
+function withFeatureHOC(Component) {
+    return function(props) {
+        return <Component {...props} />;
+    }
+}
+
+// Using arrow functions to define the same function as above
+const withFeature = (Component) => (props) =>
+    <Component {...props} />
+
+// The output component should show the Loading component when the loading state is true,
+// otherwise it should show the input component. A conditional rendering is a great use case for an HOC
+const withLoadingOLD = (Component) => (props) => 
+    props.isLoading
+        ? <Loading />
+        : <Component { ...props } />
+        
+// he input component may not case about the isLoading property. You can use ES6 rest
+// destructuring to avoid it. It takes one property out of the object, but keeps the remaining object,
+// which also works with multiple properties.
+const withLoading = (Component) => ({ isLoading, ...rest }) => 
+    isLoading
+        ? <Loading />
+        : <Component { ...rest } />
+
 const Loading = () =>
-    <div>Loading...</div>
+    <div>Loading...</div>    
 
 // ES6 Class Component. The this object of an ES6 class component helps us to reference the DOM element with the ref attribute.
 // The official documentation mentions three cases where you need to access the DOM node (this us usually an anti pattern in React,
@@ -374,7 +400,9 @@ Button.propTypes = {
     // className is nt required because it can default to an empty string
     className: PropTypes.string,
     children: PropTypes.node.isRequired,
-}        
+}
+
+const ButtonWithLoading = withLoading(Button);
 
 
 const largeColumn = {
