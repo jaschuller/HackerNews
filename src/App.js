@@ -44,6 +44,10 @@ class App extends Component {
             // set initial search state
             searchTerm: DEFAULT_QUERY,
             error: null,
+            // The initial value of isLoading property is false. We don't load anything before the App component is mounted.
+            // When the request is made, the loading state is set to true. The request will succeed eventually, and you can set the loading 
+            // state to false.
+            isLoading: false,
         };
         
         // the method is bound to the class (which is why is uses this) and thus becomes a class method
@@ -87,7 +91,8 @@ class App extends Component {
                 [searchKey]: { hits : updatedHits, page } // ensures that updated result is stored by searchKey in the results map
                                                           // the value stored is an object with a hits and page property
                                                           // this is the first step to enable cache
-            } 
+            } ,
+            isLoading: false
         });
     }
 
@@ -109,6 +114,8 @@ class App extends Component {
     // axious() uses a HTTP GET by default. You can make the call explicit with axious.get(), or use another HTTP method such as HTTP POST
     // with axio().post.
     fetchSearchTopStories(searchTerm, page = 0) {
+        this.setState({ isLoading: true });
+        
         // the page argument uses JavaScript ES6 default parameter to introduce the fallback to page 0
         // in case no defined page argument is provided for the function
         axios(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}${page}&${PARAM_HPP}${DEFAULT_HPP}`)
@@ -200,6 +207,7 @@ class App extends Component {
             results,
             searchKey,
             error,
+            isLoading
         } = this.state;
 
         const page = (
@@ -244,15 +252,20 @@ class App extends Component {
                 />
                 }
                 <div className="interactions">
-                    {/* pass searchKey rather than searchTerm to the More button. Otherwise paginated fetch depends on searchTerm which is fluctuant */}
-                    <Button onClick={() => this.fetchSearchTopStories(searchKey, page + 1)}>
-                        More
-                    </Button>
+                    { isLoading
+                      ? <Loading />
+                      : <Button onClick={() => this.fetchSearchTopStories(searchKey, page + 1)}>
+                          More
+                        </Button>
+                    }
                 </div>
             </div>
         );             
     }
 }
+
+const Loading = () =>
+    <div>Loading...</div>
 
 // ES6 Class Component. The this object of an ES6 class component helps us to reference the DOM element with the ref attribute.
 // The official documentation mentions three cases where you need to access the DOM node (this us usually an anti pattern in React,
