@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
 import axios from 'axios';
+import { sortBy } from 'lodash';
+import classNames from 'classnames';
 import PropTypes, { object } from 'prop-types';
 import './App.css';
 
@@ -13,6 +15,14 @@ const PATH_SEARCH = '/search';
 const PARAM_SEARCH = 'query=';
 const PARAM_PAGE = 'page=';
 const PARAM_HPP = 'hitsPerPage=';
+
+const SORTS = {
+    NONE: list => list,
+    TITLE: list => sortBy(list, 'title'),
+    AUTHOR: list => sortBy(list, 'author'),
+    COMMENTS: list => sortBy(list, 'num_comments').reverse(), // use .reverse() to see the list sorted by highest number of comments
+    POINTS: list => sortBy(list, 'points').reverse(), // use .reverse() to see the list sorted by highest number of points
+}
 
 // App is a derived class since it extends component
 class App extends Component {
@@ -48,6 +58,8 @@ class App extends Component {
             // When the request is made, the loading state is set to true. The request will succeed eventually, and you can set the loading 
             // state to false.
             isLoading: false,
+            sortKey: 'NONE',
+            isSortReverse: false,
         };
         
         // the method is bound to the class (which is why is uses this) and thus becomes a class method
@@ -57,6 +69,7 @@ class App extends Component {
         this.onDismiss = this.onDismiss.bind(this);
         this.onSearchSubmit = this.onSearchSubmit.bind(this);
         this.onSearchChange = this.onSearchChange.bind(this);
+        this.onSort = this.onSort.bind(this);
     }
 
     needsToSeachTopStories(searchTerm) {
@@ -172,16 +185,6 @@ class App extends Component {
         this.fetchSearchTopStories(searchTerm);
     }
 
-    // When using a handler in your element, you get access to the synthetic React event in your callback function's signatureate
-    // the event has the value of the input field in its target object, so you can update the local state with a search term
-    // using this.setState()
-    onSearchChange(event) {
-        // Reacts setState is a shallow merge, which means that it preserves the values of sibling properties 
-        // in the state object when it updates a property 
-        this.setState({searchTerm: event.target.value})
-        console.log(event.target.value);
-    }
-
     // fetch the top stories whenever search is submitted
     onSearchSubmit(event) {
         const { searchTerm } = this.state;
@@ -197,7 +200,22 @@ class App extends Component {
         // for a submit callback in an HTML form. In React, you will often come across the preventDefault()
         // event method to suppress the native browser behavior
         event.preventDefault();
-    }    
+    }
+
+    // When using a handler in your element, you get access to the synthetic React event in your callback function's signatureate
+    // the event has the value of the input field in its target object, so you can update the local state with a search term
+    // using this.setState()
+    onSearchChange(event) {
+        // Reacts setState is a shallow merge, which means that it preserves the values of sibling properties 
+        // in the state object when it updates a property 
+        this.setState({searchTerm: event.target.value})
+        console.log(event.target.value);
+    }
+
+    onSort(sortKey) {
+        const isSortReverse = this.state.sortKey === sortKey && !this.state.isSortReverse;
+        this.setState({ sortKey, isSortReverse });
+    }
         
     render() { 
         
@@ -207,7 +225,9 @@ class App extends Component {
             results,
             searchKey,
             error,
-            isLoading
+            isLoading,
+            sortKey,
+            isSortReverse
         } = this.state;
 
         const page = (
@@ -248,6 +268,9 @@ class App extends Component {
                 </div>
                 : <Table 
                     list={list}
+                    sortKey={sortKey}
+                    isSortReverse={isSortReverse}
+                    onSort={this.onSort}
                     onDismiss={this.onDismiss}
                 />
                 }
@@ -417,26 +440,82 @@ const smallColumn = {
     width: '10%',
 }
 
-const Table = ({list, onDismiss}) =>
-        <div className="table">
-            {list.map(item =>
-                <div key={item.objectID} className="table-row">
-                    <span style={largeColumn}>
-                        <a href={item.url}>{item.title}</a>
-                    </span>
-                    <span style={midColumn}> Author: {item.author}</span>
-                    <span style={smallColumn}> Comments: {item.num_comments}</span>
-                    <span style={smallColumn}> Points: {item.points}</span>
-                    <span style={smallColumn}>
-                        <Button
-                            onClick={() => onDismiss(item.objectID)}
+const Table = ({
+        list,
+        sortKey,
+        isSortReverse,
+        onSort, 
+        onDismiss,
+    }) => {
+        const sortedList = SORTS[sortKey](list);
+        const reverseSortedList = isSortReverse
+            ? sortedList.reverse()
+            : sortedList;
+
+        return(
+            <div className="table">
+                <div className="table-header">
+                    <span style={{ width: '40%'}}>
+                        <Sort
+                            sortKey={'TITLE'}
+                            onSort={onSort}
+                            activeSortKey={sortKey}
                         >
-                            Dismiss
-                        </Button>                                        
-                    </span>                                                                        
+                            Title
+                        </Sort>
+                    </span>
+                    <span style={{ width: '30%'}}>
+                        <Sort
+                            sortKey={'AUTHOR'}
+                            onSort={onSort}
+                            activeSortKey={sortKey}
+                        >
+                            Author
+                        </Sort>
+                    </span>
+                    <span style={{ width: '10%'}}>
+                        <Sort
+                            sortKey={'COMMENTS'}
+                            onSort={onSort}
+                            activeSortKey={sortKey}
+                        >
+                            Comments
+                        </Sort>
+                    </span>
+                    <span style={{ width: '10%'}}>
+                        <Sort
+                            sortKey={'POINTS'}
+                            onSort={onSort}
+                            activeSortKey={sortKey}
+                        >
+                            Points
+                        </Sort>
+                    </span>
+                    <span style={{ width: '10%'}}>
+                        Archive
+                    </span>                                                                
                 </div>
-            )}
-        </div>
+                {reverseSortedList.map(item =>
+                    <div key={item.objectID} className="table-row">
+                        <span style={largeColumn}>
+                            <a href={item.url}>{item.title}</a>
+                        </span>
+                        <span style={midColumn}> Author: {item.author}</span>
+                        <span style={smallColumn}> Comments: {item.num_comments}</span>
+                        <span style={smallColumn}> Points: {item.points}</span>
+                        <span style={smallColumn}>
+                            <Button
+                                onClick={() => onDismiss(item.objectID)}
+                            >
+                                Dismiss
+                            </Button>                                        
+                        </span>                                                                        
+                    </div>
+                )}
+            </div>
+        );
+    }
+
 
 /*
 Table.propTypes = {
@@ -457,7 +536,30 @@ Table.propTypes = {
         })
     ).isRequired,
     onDismiss: PropTypes.func.isRequired,
-}        
+}
+
+const Sort = ({ 
+    sortKey,
+    activeSortKey, 
+    onSort, 
+    children 
+}) => {
+    /* define sortClass more efficiantly using classnames library */
+    const sortClass = classNames(
+        'button-inline',
+        { 'button-active': sortKey === activeSortKey}
+    );
+
+    return (
+        <Button 
+        onClick={() => onSort(sortKey)}
+        className={sortClass}
+    >
+        {children}
+    </Button>
+    );
+}
+
 
 export default App;
 
