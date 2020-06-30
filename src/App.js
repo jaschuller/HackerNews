@@ -24,6 +24,38 @@ const SORTS = {
     POINTS: list => sortBy(list, 'points').reverse(), // use .reverse() to see the list sorted by highest number of points
 }
 
+// Higher-order function (it returns a function). The function instead of object approach to setState()
+// fixes potential bugs, while increasing the readability and maintainability of the code. Further, it becomes
+// testable outside of the App component.
+const updateSearchTopStoriesState = (hits, page) => (prevState) => {
+    // retrieve the searchKey from component state. Remember that searchKey gets set
+    // on componentDidMount() and onSearchSubmit()
+    const { searchKey, results } = prevState;
+
+    // old hits have to get merged with the new hits, but the old hits
+    // gets retrieved from the results map with the searchKey as key
+    const oldHits = results && results[searchKey]
+        ? results[searchKey].hits
+        : [];
+
+    const updatedHits = [
+        ...oldHits,
+        ...hits
+    ];
+
+    return {
+        results: {
+            ...results, // spread all the results in state by searchKey, otherwise you would lose all the results you have stored before
+            // [searchKey] syntax - ES6 Computed property name. Expression in brackets is computed and used as the property name
+            // this is part of the ECMAScript 2015 object initializer syntax 
+            [searchKey]: { hits : updatedHits, page } // ensures that updated result is stored by searchKey in the results map
+                                                        // the value stored is an object with a hits and page property
+                                                        // this is the first step to enable cache
+        },
+        isLoading: false
+    };        
+};
+
 // App is a derived class since it extends component
 class App extends Component {
     
@@ -76,34 +108,8 @@ class App extends Component {
     }
 
     setSearchTopStories(result) {
-        // retrieve the searchKey from component state. Remember that searchKey gets set
-        // on componentDidMount() and onSearchSubmit()
         const { hits, page } = result;
-        const { searchKey, results } = this.state;
-
-        // old hits have to get merged with the new hits, but the old hits
-        // gets retrieved from the results map with the searchKey as key
-        const oldHits = results && results[searchKey]
-            ? results[searchKey].hits
-            : [];
-
-        const updatedHits = [
-            ...oldHits,
-            ...hits
-        ];
-
-        // set a new result into the results map in the state.
-        this.setState({ 
-            results: { 
-                ...results, // spread all the results in state by searchKey, otherwise you would lose all the results you have stored before
-                // [searchKey] syntax - ES6 Computed property name. Expression in brackets is computed and used as the property name
-                // this is part of the ECMAScript 2015 object initializer syntax 
-                [searchKey]: { hits : updatedHits, page } // ensures that updated result is stored by searchKey in the results map
-                                                          // the value stored is an object with a hits and page property
-                                                          // this is the first step to enable cache
-            } ,
-            isLoading: false
-        });
+        this.setState(updateSearchTopStoriesState(hits, page));
     }
 
     // Native Fetch: not all browsers suppport this, especially older browsers. Also when testing the application 
@@ -273,24 +279,6 @@ class App extends Component {
         );             
     }
 }
-
-// It is a useful convention to prefix a HOC (Higher Order Component) with "with".
-function withFeatureHOC(Component) {
-    return function(props) {
-        return <Component {...props} />;
-    }
-}
-
-// Using arrow functions to define the same function as above
-const withFeature = (Component) => (props) =>
-    <Component {...props} />
-
-// The output component should show the Loading component when the loading state is true,
-// otherwise it should show the input component. A conditional rendering is a great use case for an HOC
-const withLoadingOLD = (Component) => (props) => 
-    props.isLoading
-        ? <Loading />
-        : <Component { ...props } />
         
 // he input component may not case about the isLoading property. You can use ES6 rest
 // destructuring to avoid it. It takes one property out of the object, but keeps the remaining object,
@@ -534,14 +522,6 @@ class Table extends Component {
     }
 }
 
-
-/*
-Table.propTypes = {
-    list: PropTypes.array.isRequired,
-    onDismiss: PropTypes.func.isRequired,
-} 
-*/
-
 // While the above works, you can define the content of an array PropType more explicity
 Table.propTypes = {
     list: PropTypes.arrayOf(
@@ -581,8 +561,10 @@ const Sort = ({
 
 export default App;
 
+// TODO write test for updateSearchTopStoriesState
 export {
     Button,
     Search,
     Table,
+    updateSearchTopStoriesState,
 }
