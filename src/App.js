@@ -58,8 +58,6 @@ class App extends Component {
             // When the request is made, the loading state is set to true. The request will succeed eventually, and you can set the loading 
             // state to false.
             isLoading: false,
-            sortKey: 'NONE',
-            isSortReverse: false,
         };
         
         // the method is bound to the class (which is why is uses this) and thus becomes a class method
@@ -68,8 +66,7 @@ class App extends Component {
         this.fetchSearchTopStories = this.fetchSearchTopStories.bind(this);
         this.onDismiss = this.onDismiss.bind(this);
         this.onSearchSubmit = this.onSearchSubmit.bind(this);
-        this.onSearchChange = this.onSearchChange.bind(this);
-        this.onSort = this.onSort.bind(this);
+        this.onSearchChange = this.onSearchChange.bind(this);        
     }
 
     needsToSeachTopStories(searchTerm) {
@@ -211,11 +208,6 @@ class App extends Component {
         this.setState({searchTerm: event.target.value})
         console.log(event.target.value);
     }
-
-    onSort(sortKey) {
-        const isSortReverse = this.state.sortKey === sortKey && !this.state.isSortReverse;
-        this.setState({ sortKey, isSortReverse });
-    }
         
     render() { 
         
@@ -225,9 +217,7 @@ class App extends Component {
             results,
             searchKey,
             error,
-            isLoading,
-            sortKey,
-            isSortReverse
+            isLoading
         } = this.state;
 
         const page = (
@@ -268,9 +258,6 @@ class App extends Component {
                 </div>
                 : <Table 
                     list={list}
-                    sortKey={sortKey}
-                    isSortReverse={isSortReverse}
-                    onSort={this.onSort}
                     onDismiss={this.onDismiss}
                 />
                 }
@@ -440,13 +427,43 @@ const smallColumn = {
     width: '10%',
 }
 
-const Table = ({
-        list,
-        sortKey,
-        isSortReverse,
-        onSort, 
-        onDismiss,
-    }) => {
+// Moving substate from one component to another is known as lifting state. We want to move
+// state that isnt used in the App component into the Table component, down from parent to child 
+// component. To start change table component from a functional stateless component to an ES6 class
+// component.
+class Table extends Component {
+
+    // After refactoring into ES6 class and adding a constructor, we can move state and class methods
+    // with the sort functionality from the App component down into the Table component
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            sortKey: 'NONE',
+            isSortReverse: false,
+        };
+
+        this.onSort = this.onSort.bind(this);
+    }
+
+    onSort(sortKey) {
+        const isSortReverse = this.state.sortKey === sortKey && 
+          !this.state.isSortReverse;
+
+        this.setState({ sortKey, isSortReverse });
+    }    
+
+    render() {
+        const {
+            list, 
+            onDismiss
+        } = this.props;
+
+        const {
+            sortKey,
+            isSortReverse
+        } = this.state;
+
         const sortedList = SORTS[sortKey](list);
         const reverseSortedList = isSortReverse
             ? sortedList.reverse()
@@ -458,7 +475,7 @@ const Table = ({
                     <span style={{ width: '40%'}}>
                         <Sort
                             sortKey={'TITLE'}
-                            onSort={onSort}
+                            onSort={this.onSort}
                             activeSortKey={sortKey}
                         >
                             Title
@@ -467,7 +484,7 @@ const Table = ({
                     <span style={{ width: '30%'}}>
                         <Sort
                             sortKey={'AUTHOR'}
-                            onSort={onSort}
+                            onSort={this.onSort}
                             activeSortKey={sortKey}
                         >
                             Author
@@ -476,7 +493,7 @@ const Table = ({
                     <span style={{ width: '10%'}}>
                         <Sort
                             sortKey={'COMMENTS'}
-                            onSort={onSort}
+                            onSort={this.onSort}
                             activeSortKey={sortKey}
                         >
                             Comments
@@ -485,7 +502,7 @@ const Table = ({
                     <span style={{ width: '10%'}}>
                         <Sort
                             sortKey={'POINTS'}
-                            onSort={onSort}
+                            onSort={this.onSort}
                             activeSortKey={sortKey}
                         >
                             Points
@@ -515,6 +532,7 @@ const Table = ({
             </div>
         );
     }
+}
 
 
 /*
