@@ -8,7 +8,10 @@ import renderer from 'react-test-renderer';
 import Enzyme, { shallow } from 'enzyme';
 import Adaptor from 'enzyme-adapter-react-16';
 
-import App, { Search, Button, Table } from './App';
+import App from './App';
+import Search from './Search';
+import Button from './Buttons';
+import Table from './Table';
 
 Enzyme.configure({ adapter: new Adaptor() });
 

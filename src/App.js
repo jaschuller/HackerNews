@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
 import axios from 'axios';
-import { sortBy } from 'lodash';
-import classNames from 'classnames';
-import PropTypes, { object } from 'prop-types';
 import './App.css';
+import Button from './Buttons';
+import Search from './Search';
+import Table from './Table';
 
 const DEFAULT_QUERY = 'redux';
 const DEFAULT_HPP = '20'; // number of results returned per page of pagination
@@ -16,13 +16,6 @@ const PARAM_SEARCH = 'query=';
 const PARAM_PAGE = 'page=';
 const PARAM_HPP = 'hitsPerPage=';
 
-const SORTS = {
-    NONE: list => list,
-    TITLE: list => sortBy(list, 'title'),
-    AUTHOR: list => sortBy(list, 'author'),
-    COMMENTS: list => sortBy(list, 'num_comments').reverse(), // use .reverse() to see the list sorted by highest number of comments
-    POINTS: list => sortBy(list, 'points').reverse(), // use .reverse() to see the list sorted by highest number of points
-}
 
 // Higher-order function (it returns a function). The function instead of object approach to setState()
 // fixes potential bugs, while increasing the readability and maintainability of the code. Further, it becomes
@@ -280,7 +273,7 @@ class App extends Component {
     }
 }
         
-// he input component may not case about the isLoading property. You can use ES6 rest
+// The input component may not care about the isLoading property. You can use ES6 rest
 // destructuring to avoid it. It takes one property out of the object, but keeps the remaining object,
 // which also works with multiple properties.
 const withLoading = (Component) => ({ isLoading, ...rest }) => 
@@ -289,282 +282,13 @@ const withLoading = (Component) => ({ isLoading, ...rest }) =>
         : <Component { ...rest } />
 
 const Loading = () =>
-    <div>Loading...</div>    
-
-// ES6 Class Component. The this object of an ES6 class component helps us to reference the DOM element with the ref attribute.
-// The official documentation mentions three cases where you need to access the DOM node (this us usually an anti pattern in React,
-// because you should use its declarative way of doing things and its unidirectional data flow).
-//  - to use the DOM API (focus, media playback, etc.)
-//  - to invoke imperative DOM node animations
-//  - to integrate with a third-party library that nees the DOM node (e.g. D3.js)
-class Search extends Component {
-    // Now you can focus the input field when the component mounted by using the this object, 
-    // the appropriate lifecycle method, and the DOM API. The input should be focused when the application renders.
-    componentDidMount() {
-        if (this.input) {
-            this.input.focus();
-        }
-    }
-    render() {
-        const {
-            value,
-            onChange,
-            onSubmit,
-            children
-        } = this.props;
-        return (
-            <form onSubmit={onSubmit}>
-                <input
-                type="text"
-                value={value}
-                onChange={onChange}
-                ref={el => this.input = el}
-                />
-                <button type="submit">
-                    {children}
-                </button>
-            </form>
-        );
-    }
-}
-
-Search.propTypes = {
-value: PropTypes.string,
-onChange: PropTypes.func.isRequired,
-onSubmit: PropTypes.func.isRequired,
-children: PropTypes.node.isRequired,
-}
-
-// Composable Components: by passing children prop ("Filter by" used here) the Search 
-// component can destructure the children property from the props object and specify
-// where it should be displayed (next to the input in this scenario)
-// In this way when the Search component is used elsewhere, you can use different entities, since
-// it is not just text that can be passed as children. The children property also makes it possible
-// to weave components into each other
-//
-// Functional Stateless Component: functions that take an input and return an output
-// the inputs are props, and the output is a component instance in plain JSX
-// You cannot update the state because there is no this object
-// Additionally, they have no lifecycle methods except for the render() method which is applied implicitly
-//
-// if we needed to do more with state, we could refactor this into an ES6 functional component
-// Use destructuring in the function signature as best practice
-const SearchFunctionalStateless = ({
-        value, 
-        onChange,
-        onSubmit, 
-        children
-    }) =>
-        <form onSubmit={onSubmit}>
-             <input
-                type="text"
-                value={value}
-                onChange={onChange}
-            />
-            <button type="submit">
-                {children}
-            </button>
-        </form>
-
-Search.propTypes = {
-    value: PropTypes.string,
-    onChange: PropTypes.func.isRequired,
-    onSubmit: PropTypes.func.isRequired,
-    children: PropTypes.node.isRequired,
-}        
-
-const Button = ({onClick, className, children}) =>
-        <button
-            onClick={onClick}
-            className={className}
-            type="button"
-        >
-            {children}
-        </button>
-
-// In ES6 className could be defined in the component signature with a default parameter.
-// However another way is to use default prop to ensure the property is set to a default value when
-// the parent component does not specify it.
-Button.defaultProps = {
-    className: '',
-};        
-
-// React comes with a built in type checker to prevent bugs. You can use PropTypes to
-// describe your component interface. All the props passed from a parent compnent to a child
-// get validated based on the PropTypes interface assigned to the child.
-Button.propTypes = {
-    // Using isRquired makes the property required, otherwise it can be null or undefined
-    onClick: PropTypes.func.isRequired,
-    // className is nt required because it can default to an empty string
-    className: PropTypes.string,
-    children: PropTypes.node.isRequired,
-}
+    <div>Loading...</div>          
 
 const ButtonWithLoading = withLoading(Button);
-
-
-const largeColumn = {
-    width: '40%',
-}
-
-const midColumn = {
-    width: '30%',
-}
-
-const smallColumn = {
-    width: '10%',
-}
-
-// Moving substate from one component to another is known as lifting state. We want to move
-// state that isnt used in the App component into the Table component, down from parent to child 
-// component. To start change table component from a functional stateless component to an ES6 class
-// component.
-class Table extends Component {
-
-    // After refactoring into ES6 class and adding a constructor, we can move state and class methods
-    // with the sort functionality from the App component down into the Table component
-    constructor(props) {
-        super(props);
-
-        this.state = {
-            sortKey: 'NONE',
-            isSortReverse: false,
-        };
-
-        this.onSort = this.onSort.bind(this);
-    }
-
-    onSort(sortKey) {
-        const isSortReverse = this.state.sortKey === sortKey && 
-          !this.state.isSortReverse;
-
-        this.setState({ sortKey, isSortReverse });
-    }    
-
-    render() {
-        const {
-            list, 
-            onDismiss
-        } = this.props;
-
-        const {
-            sortKey,
-            isSortReverse
-        } = this.state;
-
-        const sortedList = SORTS[sortKey](list);
-        const reverseSortedList = isSortReverse
-            ? sortedList.reverse()
-            : sortedList;
-
-        return(
-            <div className="table">
-                <div className="table-header">
-                    <span style={{ width: '40%'}}>
-                        <Sort
-                            sortKey={'TITLE'}
-                            onSort={this.onSort}
-                            activeSortKey={sortKey}
-                        >
-                            Title
-                        </Sort>
-                    </span>
-                    <span style={{ width: '30%'}}>
-                        <Sort
-                            sortKey={'AUTHOR'}
-                            onSort={this.onSort}
-                            activeSortKey={sortKey}
-                        >
-                            Author
-                        </Sort>
-                    </span>
-                    <span style={{ width: '10%'}}>
-                        <Sort
-                            sortKey={'COMMENTS'}
-                            onSort={this.onSort}
-                            activeSortKey={sortKey}
-                        >
-                            Comments
-                        </Sort>
-                    </span>
-                    <span style={{ width: '10%'}}>
-                        <Sort
-                            sortKey={'POINTS'}
-                            onSort={this.onSort}
-                            activeSortKey={sortKey}
-                        >
-                            Points
-                        </Sort>
-                    </span>
-                    <span style={{ width: '10%'}}>
-                        Archive
-                    </span>                                                                
-                </div>
-                {reverseSortedList.map(item =>
-                    <div key={item.objectID} className="table-row">
-                        <span style={largeColumn}>
-                            <a href={item.url}>{item.title}</a>
-                        </span>
-                        <span style={midColumn}> Author: {item.author}</span>
-                        <span style={smallColumn}> Comments: {item.num_comments}</span>
-                        <span style={smallColumn}> Points: {item.points}</span>
-                        <span style={smallColumn}>
-                            <Button
-                                onClick={() => onDismiss(item.objectID)}
-                            >
-                                Dismiss
-                            </Button>                                        
-                        </span>                                                                        
-                    </div>
-                )}
-            </div>
-        );
-    }
-}
-
-// While the above works, you can define the content of an array PropType more explicity
-Table.propTypes = {
-    list: PropTypes.arrayOf(
-        PropTypes.shape({
-            objectID: PropTypes.string.isRequired,
-            author: PropTypes.string,
-            url: PropTypes.string,
-            num_comments: PropTypes.number,
-            points: PropTypes.number,
-        })
-    ).isRequired,
-    onDismiss: PropTypes.func.isRequired,
-}
-
-const Sort = ({ 
-    sortKey,
-    activeSortKey, 
-    onSort, 
-    children 
-}) => {
-    /* define sortClass more efficiantly using classnames library */
-    const sortClass = classNames(
-        'button-inline',
-        { 'button-active': sortKey === activeSortKey}
-    );
-
-    return (
-        <Button 
-        onClick={() => onSort(sortKey)}
-        className={sortClass}
-    >
-        {children}
-    </Button>
-    );
-}
-
 
 export default App;
 
 // TODO write test for updateSearchTopStoriesState
 export {
-    Button,
-    Search,
-    Table,
     updateSearchTopStoriesState,
 }

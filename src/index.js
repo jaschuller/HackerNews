@@ -2,9 +2,9 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
-import ExplainBindingsComponent from './ExplainBindingsComponent';
-import Counter from './Counter';
-//import * as serviceWorker from './serviceWorker';
+// import ExplainBindingsComponent from './Examples/Bindings/ExplainBindingsComponent';
+// import Counter from './Examples/Counter';
+// import * as serviceWorker from './serviceWorker';
 
 // Uses a DOM node in your HTML to replace it with JSX. This way you can
 // integrat React in any foreign application easily, and you can use ReactDOM.render()
