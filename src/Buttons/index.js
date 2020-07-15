@@ -1,6 +1,13 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
+// Functional Stateless Component: functions that take an input and return an output
+// the inputs are props, and the output is a component instance in plain JSX
+// You cannot update the state because there is no this object
+// Additionally, they have no lifecycle methods except for the render() method which is applied implicitly
+//
+// if we needed to do more with state, we could refactor this into an ES6 functional component
+// Use destructuring in the function signature as best practice
 const Button = ({onClick, className, children}) =>
         <button
             onClick={onClick}

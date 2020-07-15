@@ -5,6 +5,12 @@ import Button from './Buttons';
 import Search from './Search';
 import Table from './Table';
 
+// fontawesome imports
+import { faSpinner } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+
+const iconLoading = <FontAwesomeIcon icon={faSpinner} spin size="6x"/>
+
 const DEFAULT_QUERY = 'redux';
 const DEFAULT_HPP = '20'; // number of results returned per page of pagination
 
@@ -94,9 +100,9 @@ class App extends Component {
         this.onSearchChange = this.onSearchChange.bind(this);        
     }
 
-    needsToSeachTopStories(searchTerm) {
-        // if key value pair exists in results, return false. 
-        // Otherwise return true since result data is not cached and we will need to execute fetch        
+    // if key value pair exists in results, return false. 
+    // Otherwise return true since result data is not cached and we will need to execute a new fetch
+    needsToSeachTopStories(searchTerm) {        
         return !this.state.results[searchTerm];
     }
 
@@ -219,12 +225,14 @@ class App extends Component {
             isLoading
         } = this.state;
 
+        // logical && operator. page will equal results[searchKey].page, otherwise 0
+        // (assuming the previous variables are also defined and exist)
         const page = (
             results && 
             results[searchKey] &&
             results[searchKey].page
          ) || 0; 
-         
+        
         const list = (
             results &&
             results[searchKey] &&
@@ -282,8 +290,11 @@ const withLoading = (Component) => ({ isLoading, ...rest }) =>
         : <Component { ...rest } />
 
 const Loading = () =>
-    <div>Loading...</div>          
-
+        <div>
+            {iconLoading}<br/><br/>
+            Loading...
+        </div>
+          
 const ButtonWithLoading = withLoading(Button);
 
 export default App;

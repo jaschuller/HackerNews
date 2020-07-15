@@ -3,6 +3,11 @@ import PropTypes from 'prop-types';
 import { sortBy } from 'lodash';
 import classNames from 'classnames';
 import Button from '../Buttons';
+// get our fontawesome imports
+import { faSortDown } from "@fortawesome/free-solid-svg-icons";
+import { faSortUp } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+
 
 const SORTS = {
     NONE: list => list,
@@ -15,7 +20,8 @@ const SORTS = {
 const Sort = ({ 
     sortKey,
     activeSortKey, 
-    onSort, 
+    onSort,
+    isSortReverse, 
     children 
 }) => {
     /* define sortClass more efficiantly using classnames library */
@@ -24,12 +30,17 @@ const Sort = ({
         { 'button-active': sortKey === activeSortKey}
     );
 
+    // Show a sort icon if current sort instance is being activated, otherwise don't show any icon
+    let sortIcon = null;
+    if (sortKey===activeSortKey)
+        sortIcon = (sortKey===activeSortKey && isSortReverse) ? sortUp : sortDown;   
+
     return (
         <Button 
         onClick={() => onSort(sortKey)}
         className={sortClass}
     >
-        {children}
+        {children} {sortIcon}
     </Button>
     );
 }
@@ -46,6 +57,9 @@ const smallColumn = {
     width: '10%',
 }
 
+const sortDown = <FontAwesomeIcon icon={faSortDown} />
+const sortUp = <FontAwesomeIcon icon={faSortUp} />
+
 // Moving substate from one component to another is known as lifting state. We want to move
 // state that isnt used in the App component into the Table component, down from parent to child 
 // component. To start change table component from a functional stateless component to an ES6 class
@@ -60,6 +74,7 @@ class Table extends Component {
         this.state = {
             sortKey: 'NONE',
             isSortReverse: false,
+            sortIcon: sortDown,
         };
 
         this.onSort = this.onSort.bind(this);
@@ -86,7 +101,7 @@ class Table extends Component {
         const sortedList = SORTS[sortKey](list);
         const reverseSortedList = isSortReverse
             ? sortedList.reverse()
-            : sortedList;
+            : sortedList;        
 
         return(
             <div className="table">
@@ -96,6 +111,7 @@ class Table extends Component {
                             sortKey={'TITLE'}
                             onSort={this.onSort}
                             activeSortKey={sortKey}
+                            isSortReverse={isSortReverse}
                         >
                             Title
                         </Sort>
@@ -105,6 +121,7 @@ class Table extends Component {
                             sortKey={'AUTHOR'}
                             onSort={this.onSort}
                             activeSortKey={sortKey}
+                            isSortReverse={isSortReverse}
                         >
                             Author
                         </Sort>
@@ -114,6 +131,7 @@ class Table extends Component {
                             sortKey={'COMMENTS'}
                             onSort={this.onSort}
                             activeSortKey={sortKey}
+                            isSortReverse={isSortReverse}
                         >
                             Comments
                         </Sort>
@@ -123,6 +141,7 @@ class Table extends Component {
                             sortKey={'POINTS'}
                             onSort={this.onSort}
                             activeSortKey={sortKey}
+                            isSortReverse={isSortReverse}
                         >
                             Points
                         </Sort>
