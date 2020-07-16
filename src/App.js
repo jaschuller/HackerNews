@@ -5,11 +5,13 @@ import Button from './Buttons';
 import Search from './Search';
 import Table from './Table';
 
-// fontawesome imports
+// fontawesome imports. Icons can be browsed here https://fontawesome.com/icons?d=gallery&m=free
 import { faSpinner } from "@fortawesome/free-solid-svg-icons";
+import { faCog } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 const iconLoading = <FontAwesomeIcon icon={faSpinner} spin size="6x"/>
+const iconReact = <FontAwesomeIcon icon={faCog} spin />
 
 const DEFAULT_QUERY = 'redux';
 const DEFAULT_HPP = '20'; // number of results returned per page of pagination
@@ -250,13 +252,17 @@ class App extends Component {
             // This creates a self-contained unidirectional data flow loop, and the local component state
             // is the single source of truth for the input field. 
             <div className="page">
+                <header>
+                    <h1>Hacker News {iconReact}</h1>
+                    <h4>Built by Justin Schuller, following steps from <i>the Road to learn React</i> (Robin Wieruch, 2019)</h4>
+                </header>
                 <div className="interactions">
                     <Search 
                         value={searchTerm}
                         onChange={this.onSearchChange}
                         onSubmit={this.onSearchSubmit}    
                     >
-                        Filter by
+                        Search for news
                     </Search>
                 </div>
                 { error
