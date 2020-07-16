@@ -3,11 +3,13 @@ import PropTypes from 'prop-types';
 import { sortBy } from 'lodash';
 import classNames from 'classnames';
 import Button from '../Buttons';
-// get our fontawesome imports
+// fontawesome imports
 import { faSortDown } from "@fortawesome/free-solid-svg-icons";
 import { faSortUp } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
+const sortDown = <FontAwesomeIcon icon={faSortDown} />
+const sortUp = <FontAwesomeIcon icon={faSortUp} />
 
 const SORTS = {
     NONE: list => list,
@@ -56,9 +58,6 @@ const midColumn = {
 const smallColumn = {
     width: '10%',
 }
-
-const sortDown = <FontAwesomeIcon icon={faSortDown} />
-const sortUp = <FontAwesomeIcon icon={faSortUp} />
 
 // Moving substate from one component to another is known as lifting state. We want to move
 // state that isnt used in the App component into the Table component, down from parent to child 
